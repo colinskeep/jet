@@ -10,6 +10,7 @@ module.exports = function (app) {
     app.route('/upload').put(upload);
     app.route('/updateinv').get(updateinv);
     app.route('/updateprice').get(updateprice);
+
 	//app.route('/*').get(function (req, res) {
  // res.sendStatus(404);
   //});
