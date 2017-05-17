@@ -1,5 +1,5 @@
 exports.itemid = function () {
     return ({
-        sku: "TEST-SKU-13"
+        sku: "TEST-SKU-12"
     })
 }

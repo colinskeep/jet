@@ -1,9 +1,11 @@
 var auth = require('./auth.js');
 var request = require('request');
-var fs = require('fs');
+var fs = require('fs')
 
 
-exports.put = function (orderid, itemid) {
+exports.put = function (orderid, order_items) {
+    console.log(order_items)
+    console.log(orderid)
     var global_data = fs.readFileSync("auth.txt").toString();
     var fid = fs.readFileSync("full_id.txt").toString();
     return new Promise(function (resolve, reject) {
@@ -15,12 +17,7 @@ exports.put = function (orderid, itemid) {
             },
             body: {
                 "acknowledgement_status": "accepted",
-                "order_items": [
-                    {
-                        "order_item_acknowledgement_status": "fulfillable",
-                        "order_item_id": ""+ itemid +"",
-                    }
-                ]
+                "order_items": order_items    
             },
             json: true
         },

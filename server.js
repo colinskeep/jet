@@ -8,6 +8,7 @@ var active = require('./active.js')
 var orders = require('./orders.js')
 var orderdetails = require('./orderdetails.js')
 var acknowledge = require('./acknowledge.js')
+var cron = require('./cron.js')
 
 app.get('/auth', function (req, res) {
     auth.authToken(req.rawHeaders[7], req.rawHeaders[9])
@@ -58,12 +59,6 @@ app.get('/orderdetails', function (req, res) {
     })
 })
 
-app.get('/acknowledge', function (req, res) {
-    acknowledge.put("3b8b963125df4684afbaf272fe381660", "f0e018c6fc934a0a90a5d2c85a2102b2")
-    .then(function (data) {
-        res.send(data)
-    })
-})
 
 app.listen(3000, function () {
     console.log('==========INITIALIZED ON PORT 3000==========')
