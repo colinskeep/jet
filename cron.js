@@ -11,7 +11,6 @@ setInterval(function () {
         })
 }, 60000);
 function getorderdetails(orderid) {
-    //console.log(orderid)
     orderdetails.get(orderid)
     .then( (data) =>  {
         var arr = []
@@ -26,7 +25,6 @@ function getorderdetails(orderid) {
         var orderitemid = (data.order_items[0].order_item_id)
         acknowledge.put(orderid, arr)
             .then(function (data) {
-                //console.log(data)
             })
         .catch(function (reason) {
             console.log(reason)

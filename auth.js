@@ -17,6 +17,6 @@ exports.authToken = function (user, pass) {
             resolve(body.id_token)
             fs.writeFile(path, body.id_token)
         }
-    ); 
+    );
     })
 }

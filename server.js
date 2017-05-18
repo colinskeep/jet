@@ -9,12 +9,13 @@ var orders = require('./orders.js')
 var orderdetails = require('./orderdetails.js')
 var acknowledge = require('./acknowledge.js')
 var cron = require('./cron.js')
+var shiparray = require('./shiparray.js')
 
 app.get('/auth', function (req, res) {
     auth.authToken(req.rawHeaders[7], req.rawHeaders[9])
         .then(function (data) {
             res.send(data)
-    })
+        })
 })
 
 app.put('/upload', function (req, res) {
@@ -45,8 +46,8 @@ app.put('/active', function (req, res) {
     })
 })
 
-app.get('/orders', function (req, res) {
-    orders.getorders("ready")
+app.get('/orderstatus', function (req, res) {
+    orders.getorders(req.query.status)
     .then(function (data) {
         res.send(data)
     })
@@ -59,6 +60,12 @@ app.get('/orderdetails', function (req, res) {
     })
 })
 
+app.put('/shiparray', function (req, res) {
+    shiparray.send(req.query.orderid)
+    .then(function (data) {
+        res.send(data)
+    })
+})
 
 app.listen(3000, function () {
     console.log('==========INITIALIZED ON PORT 3000==========')
