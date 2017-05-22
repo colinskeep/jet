@@ -4,6 +4,7 @@ var request = require('request');
 var fs = require('fs');
 
 exports.getorders = function (status) {
+    console.log(status)
     var global_data = fs.readFileSync("auth.txt").toString();
     return new Promise(function (resolve, reject) {
         request.get({
@@ -20,13 +21,8 @@ exports.getorders = function (status) {
                     reject(error)
                 }
                 else {
-                    var arr = []
-                    for (var i in body.order_urls) {
-                        var ids = body.order_urls[i].split("/")
-                        arr.push(ids[3])
-                    }
-                    console.log(arr)
-                    resolve(arr)
+                    console.log(body.order_urls)
+                    resolve(body.order_urls.length)
                 }
             }
         );

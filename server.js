@@ -67,6 +67,26 @@ app.put('/shiparray', function (req, res) {
     })
 })
 
+app.get('/orders', function (req, res) {
+    orders.getorders(req.query.status).then(function (id_array) {
+        for (var i in id_array) {
+            listorderdetails(id_array[i], id_array.length)
+            }
+        var arr = []
+        function listorderdetails(data, len) {
+            orderdetails.get(data).then(function (data) {
+                arr.push({
+                    "order":data
+                })
+                if (arr.length == len) {
+                    res.send(arr)
+                }
+            })
+            }
+})          
+
+    })
+
 app.listen(3000, function () {
     console.log('==========INITIALIZED ON PORT 3000==========')
 })
