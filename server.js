@@ -91,7 +91,7 @@ app.get('/orders', function (req, res) {
 app.get('/numberOfOrders', function (req, res){
     numberOfOrders.getorders(req.query.status)
     .then(function (data) {
-        res.sendStatus(data)
+        res.send(data)
     })
 })
 
