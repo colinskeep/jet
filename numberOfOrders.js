@@ -1,5 +1,4 @@
 var auth = require('./auth.js');
-var id = require('./itemdetails.js');
 var request = require('request');
 var fs = require('fs');
 
