@@ -9,7 +9,6 @@ exports.getorders = function (status) {
     return new Promise(function (resolve, reject) {
         request.get({
             url: "https://merchant-api.jet.com/api/orders/" + status + "",
-            //url: "http://requestb.in/qd57srqd",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": "bearer " + global_data + ""
