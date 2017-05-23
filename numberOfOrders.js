@@ -18,8 +18,9 @@ exports.getorders = function (status) {
                     reject(error)
                 }
                 else {
-                    //console.log(body.order_urls)
-                    resolve(body.order_urls.length)
+                    console.log(body.order_urls.length)
+                    var len = body.order_urls.length
+                    resolve(len)      
                 }
             }
         );
