@@ -93,7 +93,7 @@ app.get('/numberOfOrders', function (req, res){
     .then(function (data) {
         res.send(data)
     })
-}
+})
 
 app.listen(3000, function () {
     console.log('==========INITIALIZED ON PORT 3000==========')
