@@ -3,7 +3,6 @@ var request = require('request');
 var fs = require('fs');
 
 exports.getorders = function (status) {
-    console.log(status)
     var global_data = fs.readFileSync("auth.txt").toString();
     return new Promise(function (resolve, reject) {
         request.get({
@@ -19,7 +18,7 @@ exports.getorders = function (status) {
                     reject(error)
                 }
                 else {
-                    console.log(body.order_urls)
+                    //console.log(body.order_urls)
                     resolve(body.order_urls.length)
                 }
             }
