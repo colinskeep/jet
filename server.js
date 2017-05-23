@@ -11,6 +11,10 @@ var acknowledge = require('./acknowledge.js')
 var cron = require('./cron.js')
 var shiparray = require('./shiparray.js')
 var numberOfOrders = require('./numberOfOrders.js')
+var numberOfItems = require('./numberOfItems.js')
+var numberOfReturns = require('./numberOfReturns.js')
+var items = require('./items.js')
+var itemdetails = require('./itemDetails.js')
 
 app.get('/auth', function (req, res) {
     auth.authToken(req.rawHeaders[7], req.rawHeaders[9])
@@ -84,8 +88,26 @@ app.get('/orders', function (req, res) {
                 }
             })
             }
-})          
+    })          
+})
 
+app.get('/items', function (req, res) {
+    items.getitems().then(function (id_array) {
+        for (var i in id_array) {
+            listitemdetails(id_array[i], id_array.length)
+        }
+        var arr = []
+        function listitemdetails(data, len) {
+            itemdetails.get(data).then(function (data) {
+                arr.push({
+                    "details": data
+                })
+                if (arr.length == len) {
+                    res.send(arr)
+                }
+            })
+        }
+    })
 })
 
 app.get('/numberOfOrders', function (req, res){
@@ -94,6 +116,28 @@ app.get('/numberOfOrders', function (req, res){
         console.log(data)
         res.send({
             "orders": data
+        })
+    })
+    .catch(function (error) {
+        console.log(error)
+    })
+})
+
+app.get('/numberOfItems', function (req, res) {
+    numberOfItems.get()
+    .then(function (data) {
+        res.send({ "skus": data })
+    })
+    .catch(function (error) {
+        console.log(error)
+    })
+})
+
+app.get('/numberOfReturns', function (req, res) {
+    numberOfReturns.get(req.query.status)
+    .then(function (data) {
+        res.send({
+            "returns": data
         })
     })
     .catch(function (error) {

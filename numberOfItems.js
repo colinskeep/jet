@@ -2,13 +2,11 @@ var auth = require('./auth.js');
 var request = require('request');
 var fs = require('fs');
 
-
-exports.get = function (sku) {
-
+exports.get = function (status) {
     var global_data = fs.readFileSync("auth.txt").toString();
     return new Promise(function (resolve, reject) {
         request.get({
-            url: "https://merchant-api.jet.com/api/merchant-skus/" + sku + "",
+            url: "https://merchant-api.jet.com/api/merchant-skus",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": "bearer " + global_data + ""
@@ -20,7 +18,8 @@ exports.get = function (sku) {
                     reject(error)
                 }
                 else {
-                    resolve(body)
+                    var len = body.sku_urls.length
+                    resolve(len)
                 }
             }
         );
