@@ -1,5 +1,8 @@
 var express = require('express')
+var bodyParser = require('body-parser')
 var app = express()
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
 var auth = require('./auth.js')
 var upload = require('./itemupload.js')
 var updateinv = require('./updateInventory.js')
@@ -15,12 +18,23 @@ var numberOfItems = require('./numberOfItems.js')
 var numberOfReturns = require('./numberOfReturns.js')
 var items = require('./items.js')
 var itemdetails = require('./itemDetails.js')
+var mysql = require('./mysql.js')
+app.get('/', function (req, res) {
+  res.send({
+     "data":"dick"
+})
+})
 
-app.get('/'), function (req, res) {
-    res.send({
-        "data":"cock"
-    })
-}
+app.post('/register', function (req, res) {
+	console.log(req.body.password)
+	mysql.query(req.body.password, req.body.email)
+	.then(function(data) {
+	console.log(data)
+})
+.catch(function (error) {
+        console.log(error)
+})
+})
 
 app.get('/auth', function (req, res) {
     auth.authToken(req.rawHeaders[7], req.rawHeaders[9])
