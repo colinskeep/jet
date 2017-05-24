@@ -16,6 +16,12 @@ var numberOfReturns = require('./numberOfReturns.js')
 var items = require('./items.js')
 var itemdetails = require('./itemDetails.js')
 
+app.get('/'), function (req, res) {
+    res.send({
+        "data":"cock"
+    })
+}
+
 app.get('/auth', function (req, res) {
     auth.authToken(req.rawHeaders[7], req.rawHeaders[9])
         .then(function (data) {
