@@ -1,6 +1,5 @@
 var request = require('request');
 var path = "auth.txt";
-var fs = require('fs');
 exports.authToken = function (user, pass) {
     return new Promise(function (resolve, reject) {
         request.post({
@@ -14,8 +13,7 @@ exports.authToken = function (user, pass) {
             },
             json: true
         }, function (error, response, body) {
-            resolve(body.id_token)
-            fs.writeFile(path, body.id_token)
+            resolve({"id_token": body.id_token, "user": user})
         }
     );
     })

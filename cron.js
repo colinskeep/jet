@@ -1,6 +1,11 @@
 var orders = require('./orders.js')
 var orderdetails = require('./orderdetails.js')
 var acknowledge = require('./acknowledge.js')
+const allapitokens = require('./allapitokens.js');
+const auth = require('./auth.js');
+const apitoken = require('./apitoken.js');
+
+
 setInterval(function () {
     orders.getorders("ready")
         .then(function (orderids) {
@@ -27,7 +32,19 @@ function getorderdetails(orderid) {
             .then(function (data) {
             })
         .catch(function (reason) {
-            console.log(reason)
         });
     })
 }
+
+setInterval(function () {
+    allapitokens.update()
+    .then(function (data) {
+        for (var i in data) {
+            var email = data[i].email
+            auth.authToken(data[i].jetapiuser, data[i].jetapisecret)
+            .then((data2) => {
+            apitoken.add(data2.id_token, data2.user, email)
+            })
+        }
+    })
+}, 3000);

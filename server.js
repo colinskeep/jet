@@ -1,8 +1,10 @@
 var express = require('express')
 var bodyParser = require('body-parser')
 var app = express()
+var cookieParser = require('cookie-parser')
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
+app.use(cookieParser())
 var auth = require('./auth.js')
 var upload = require('./itemupload.js')
 var updateinv = require('./updateInventory.js')
@@ -19,6 +21,9 @@ var numberOfReturns = require('./numberOfReturns.js')
 var items = require('./items.js')
 var itemdetails = require('./itemDetails.js')
 var mysql = require('./mysql.js')
+var apikeys = require('./apikeys.js')
+var apitoken = require('./apitoken.js')
+
 app.get('/', function (req, res) {
   res.send({
      "data":"dick"
@@ -26,15 +31,32 @@ app.get('/', function (req, res) {
 })
 
 app.post('/register', function (req, res) {
-	console.log(req.body.password)
 	mysql.query(req.body.password, req.body.email)
 	.then(function(data) {
-	console.log(data)
-})
+        res.send(data)
+	})
 .catch(function (error) {
         console.log(error)
+    })
 })
+
+app.post('/jetdetails', function (req, res) {
+    apikeys.add(req.body.jwttoken, req.body.jetapiuser, req.body.jetapisecret)
+	.then(function (data) {
+	    return auth.authToken(data.apiuser, data.apipass)
+	})
+    .then(function (data) {
+        return apitoken.add(data.id_token, data.user)
+    })
+    .then(function (data) {
+        res.send(data)
+    })
+    .catch(function (error) {
+        console.log(error)
+    })
 })
+
+
 
 app.get('/auth', function (req, res) {
     auth.authToken(req.rawHeaders[7], req.rawHeaders[9])
@@ -133,7 +155,6 @@ app.get('/items', function (req, res) {
 app.get('/numberOfOrders', function (req, res){
     numberOfOrders.getorders(req.query.status)
     .then(function (data) {
-        console.log(data)
         res.send({
             "orders": data
         })
