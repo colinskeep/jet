@@ -10,6 +10,8 @@ var pool = mysql.createPool({
     database: process.env.MYSQL_DATABASE
 });
 
+//TODO: add fulfillment ID into database 
+
 exports.add = (jwttoken, apiuser, apipass) => {
     return new Promise((resolve, reject) => {
         pool.getConnection((err, connection) => {
@@ -27,7 +29,7 @@ exports.add = (jwttoken, apiuser, apipass) => {
                                     reject(error)
                                 }
                                 else {
-                                    resolve({"apiuser": apiuser, "apipass": apipass})
+                                    resolve({"apiuser": apiuser, "apipass": apipass, "email": data.email})
                                 } 
                             })
                         })

@@ -23,6 +23,7 @@ var itemdetails = require('./itemDetails.js')
 var mysql = require('./mysql.js')
 var apikeys = require('./apikeys.js')
 var apitoken = require('./apitoken.js')
+var cookieToToken = require('./cookieToToken.js')
 
 app.get('/', function (req, res) {
   res.send({
@@ -30,6 +31,8 @@ app.get('/', function (req, res) {
 })
 })
 
+
+//TODO: get authtoken and insert into database after user / pass are submitted
 app.post('/register', function (req, res) {
 	mysql.query(req.body.password, req.body.email)
 	.then(function(data) {
@@ -41,11 +44,14 @@ app.post('/register', function (req, res) {
 })
 
 app.post('/jetdetails', function (req, res) {
+    var email = ""
     apikeys.add(req.body.jwttoken, req.body.jetapiuser, req.body.jetapisecret)
 	.then(function (data) {
+	    email = data.email
 	    return auth.authToken(data.apiuser, data.apipass)
 	})
     .then(function (data) {
+        apitoken.add(data.id_token, data.user, email)
         return apitoken.add(data.id_token, data.user)
     })
     .then(function (data) {
@@ -56,6 +62,27 @@ app.post('/jetdetails', function (req, res) {
     })
 })
 
+app.get('/dashboard', function (req, res) {
+    cookieToToken.get(req.query.jwttoken)
+    .then(function (token) {
+        if (token.length <= 0) {
+
+        }else{
+            var p1 = numberOfOrders.getorders("acknowledged", token[0].jetapitoken)
+            var p2 = numberOfItems.get(token[0].jetapitoken)
+            var p3 = numberOfReturns.get("created", token[0].jetapitoken)
+            Promise.all([p1,p2,p3])
+            .then(function (data) {
+                console.log({ "orders": data[0], "items": data[1], "returns": data[2] })
+                res.send({"orders": data[0], "items": data[1], "returns": data[2]
+                })
+            })
+        }
+    })
+    .catch(function (error) {
+        console.log(error)
+    })
+})
 
 
 app.get('/auth', function (req, res) {
@@ -115,17 +142,27 @@ app.put('/shiparray', function (req, res) {
 })
 
 app.get('/orders', function (req, res) {
-    orders.getorders(req.query.status).then(function (id_array) {
+    var jetapitoken = ""
+    cookieToToken.get(req.query.jwttoken)
+    .then(function (data) {
+        jetapitoken = data[0].jetapitoken
+        return orders.getorders("acknowledged", data[0].jetapitoken)
+    })
+    .then(function (id_array) {
+        //console.log(id_array)
         for (var i in id_array) {
-            listorderdetails(id_array[i], id_array.length)
+            setTimeout(function () { listorderdetails(id_array[i], id_array.length) }, i+10);
             }
         var arr = []
         function listorderdetails(data, len) {
-            orderdetails.get(data).then(function (data) {
+            orderdetails.get(data, jetapitoken)
+                .then(function (data) {
                 arr.push({
                     "order":data
                 })
+                    console.log(arr.length, len)
                 if (arr.length == len) {
+                    console.log(arr)
                     res.send(arr)
                 }
             })

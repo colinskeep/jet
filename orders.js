@@ -1,17 +1,15 @@
-var auth = require('./auth.js');
 var id = require('./itemDetails.js');
 var request = require('request');
-var fs = require('fs');
 
-exports.getorders = function (status) {
-    var global_data = fs.readFileSync("auth.txt").toString();
+exports.getorders = function (status, jetapitoken) {
     return new Promise(function (resolve, reject) {
+        var milliseconds = (new Date).getTime();
         request.get({
-            url: "https://merchant-api.jet.com/api/orders/" + status + "",
+            url: "https://merchant-api.jet.com/api/orders/" + status + "?id="+milliseconds+"",
             //url: "http://requestb.in/qd57srqd",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "bearer " + global_data + ""
+                "Authorization": "bearer " + jetapitoken + ""
             },
             json: true
         },
@@ -20,15 +18,21 @@ exports.getorders = function (status) {
                     reject(error)
                 }
                 else {
-                    var arr = []
-                    for (var i in body.order_urls) {
-                        var ids = body.order_urls[i].split("/")
-                        arr.push(ids[3])
+                    if (body && body.order_urls && body.order_urls.length >= 1) {
+                        var arr = []
+                        for (var i in body.order_urls) {
+                            var ids = body.order_urls[i].split("/")
+                            arr.push(ids[3])
+                            resolve(arr)
+                        }
+                        }
+                    else{
+                        resolve("No Orders")
+                        }
                     }
-                    console.log(arr)
-                    resolve(arr)
+                    
                 }
-            }
+            
         );
     })
 }

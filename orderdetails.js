@@ -1,17 +1,15 @@
-var auth = require('./auth.js');
 var request = require('request');
-var fs = require('fs');
 
 
-exports.get = function (orderid) {
 
-    var global_data = fs.readFileSync("auth.txt").toString();
+exports.get = function (orderid, jetapitoken) {
+
     return new Promise(function (resolve, reject) {
         request.get({
             url: "https://merchant-api.jet.com/api/orders/withoutShipmentDetail/" + orderid + "",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "bearer " + global_data + ""
+                "Authorization": "bearer " + jetapitoken + ""
             },
             json: true
         },

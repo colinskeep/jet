@@ -12,7 +12,6 @@ var pool = mysql.createPool({
 });
 
 exports.add = (jetapitoken, apiuser, email) => {
-    //console.log(jetapitoken, apiuser, email)
     return new Promise((resolve, reject) => {
         pool.getConnection((err, connection) => {
             if (err) {

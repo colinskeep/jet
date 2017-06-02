@@ -7,20 +7,36 @@ const apitoken = require('./apitoken.js');
 
 
 setInterval(function () {
-    orders.getorders("ready")
-        .then(function (orderids) {
-            for (var i in orderids) {
-                var ids = orderids[i].split("/")
-                getorderdetails(ids[3])
-            }
-        })
-}, 60000);
-function getorderdetails(orderid) {
-    orderdetails.get(orderid)
-    .then( (data) =>  {
+    allapitokens.update()
+   .then(function (data) {
+       for (var x in data) {
+           orders.getorders("ready",data[x].jetapitoken)
+            .then(function (orderids) {
+                if (orderids == "No Orders") {
+                }
+                else {
+                    for (var i in orderids) {
+                        var ids = orderids[i].split("/")
+                        getorderdetails(orderids[i], data[x].jetapitoken)
+                    }
+                }
+            })
+           .catch(function (err) {
+               console.log(Error(err))
+           })
+       }
+   })
+   .catch(function (err) {
+        console.log(Error(err))
+    })
+}, 100000);
+
+function getorderdetails(orderid, jetapitoken) {
+    orderdetails.get(orderid, jetapitoken)
+    .then((data) =>  {
         var arr = []
-            for(var i in data.order_items){
-                var item = data.order_items[i].order_item_id
+            for(var y in data.order_items){
+                var item = data.order_items[y].order_item_id
                 var order_items = {
                     "order_item_acknowledgement_status": "fulfillable",
                     "order_item_id": "" + item + "",
@@ -28,14 +44,13 @@ function getorderdetails(orderid) {
                 arr.push(order_items)
             }
         var orderitemid = (data.order_items[0].order_item_id)
-        acknowledge.put(orderid, arr)
-            .then(function (data) {
-            })
-        .catch(function (reason) {
-        });
+        acknowledge.put(orderid, jetapitoken, arr)
     })
+    .catch(function (err) {
+        console.log(Error(err))
+    })
+    
 }
-
 setInterval(function () {
     allapitokens.update()
     .then(function (data) {
@@ -45,6 +60,12 @@ setInterval(function () {
             .then((data2) => {
             apitoken.add(data2.id_token, data2.user, email)
             })
+            .catch(function (err) {
+                console.log(Error(err))
+            })
         }
     })
-}, 3000);
+    .catch(function (err) {
+        console.log(Error(err))
+    })
+}, 100000);
