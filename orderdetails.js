@@ -19,6 +19,7 @@ exports.get = function (orderid, jetapitoken) {
                 }
                 else {
                     resolve(body)
+                    //console.log(body)
                 }
             }
         );

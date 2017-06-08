@@ -28,7 +28,7 @@ var cookieToToken = require('./cookieToToken.js')
 app.get('/', function (req, res) {
   res.send({
      "data":"dick"
-})
+    })
 })
 
 

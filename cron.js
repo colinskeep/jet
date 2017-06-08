@@ -4,6 +4,8 @@ var acknowledge = require('./acknowledge.js')
 const allapitokens = require('./allapitokens.js');
 const auth = require('./auth.js');
 const apitoken = require('./apitoken.js');
+const insertOrder =  require('./insertOrder.js')
+const insertOrderItems = require('./insertOrderItems.js')
 
 
 setInterval(function () {
@@ -29,14 +31,20 @@ setInterval(function () {
    .catch(function (err) {
         console.log(Error(err))
     })
-}, 100000);
+}, 10000);
 
+
+//TODO: add merchant_id to insert function
 function getorderdetails(orderid, jetapitoken) {
     orderdetails.get(orderid, jetapitoken)
-    .then((data) =>  {
+        .then((data) => {
+            var order_id = ""
+            var merchant_id = ""
+            insertOrder.add(data.reference_order_id, merchant_id, data.fulfillment_node, data.status, data.order_transmission_date, data.buyer.name, data.buyer.phone_number, data.shipping_to.address.address1, data.shipping_to.address.address2, data.shipping_to.address.city, data.shipping_to.address.state, data.shipping_to.address.zip_code, data.order_detail.request_shipping_carrier, data.order_detail.request_shipping_method, data.order_detail.request_ship_by)
         var arr = []
             for(var y in data.order_items){
                 var item = data.order_items[y].order_item_id
+                insertOrderItems.add(data.reference_order_id, data.order_items[y].merchant_sku, data.order_items[y].order_item_id, data.order_items[y].item_price.base_price, data.order_items[y].item_price.item_tax, data.order_items[y].product_title)
                 var order_items = {
                     "order_item_acknowledgement_status": "fulfillable",
                     "order_item_id": "" + item + "",
@@ -48,9 +56,9 @@ function getorderdetails(orderid, jetapitoken) {
     })
     .catch(function (err) {
         console.log(Error(err))
-    })
-    
+    })  
 }
+
 setInterval(function () {
     allapitokens.update()
     .then(function (data) {
