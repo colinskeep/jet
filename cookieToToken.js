@@ -21,7 +21,7 @@ exports.get = (jwttoken) => {
                connection.query(querystring, (error, results, fields) => {
                    if (error) {
                        console.log(error)
-                       reject(error)
+                       reject({jwt: false})
                    }
                    else {
                        //console.log(results)

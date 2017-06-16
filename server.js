@@ -24,6 +24,14 @@ var mysql = require('./mysql.js')
 var apikeys = require('./apikeys.js')
 var apitoken = require('./apitoken.js')
 var cookieToToken = require('./cookieToToken.js')
+var orderList = require('./orderList.js')
+var ship = require('./ship.js')
+var orderItems = require('./orderItems.js')
+var login = require('./login.js')
+var validateToken = require('./validate.js')
+var returnList = require('./returnList.js')
+var returns = require('./returns.js')
+var returnDetails = require('./returnDetails.js')
 
 app.get('/', function (req, res) {
   res.send({
@@ -34,6 +42,7 @@ app.get('/', function (req, res) {
 
 //TODO: get authtoken and insert into database after user / pass are submitted
 app.post('/register', function (req, res) {
+    console.log(req.body.password, req.body.email)
 	mysql.query(req.body.password, req.body.email)
 	.then(function(data) {
         res.send(data)
@@ -43,18 +52,45 @@ app.post('/register', function (req, res) {
     })
 })
 
+app.post('/ship', function (req, res) {
+
+    var orderid = req.body.orderid
+    var carrier = req.body.carrier
+    var method = req.body.method
+    var trackingNumber = req.body.trackingNumber
+    var shipDate = req.body.shipDate
+    var estimatedDelivery = req.body.estimatedDelivery
+    var token = ""
+    
+    cookieToToken.get(req.body.jwttoken)
+        .then(function (apitoken) {
+            token = apitoken[0].jetapitoken
+            return orderItems.query(orderid)
+        })
+        .then(function (items) {
+            //console.log(token)
+            return ship.send(orderid, token, trackingNumber, shipDate, method, estimatedDelivery, carrier, items)
+        })
+        .then(function (data) {
+            console.log(data)
+        })
+})
+
 app.post('/jetdetails', function (req, res) {
+    console.log(req.body.merchantId)
     var email = ""
-    apikeys.add(req.body.jwttoken, req.body.jetapiuser, req.body.jetapisecret)
+    apikeys.add(req.body.jwttoken, req.body.jetapiuser, req.body.jetapisecret, req.body.merchantId)
 	.then(function (data) {
-	    email = data.email
+        email = data.email
+        console.log(data.apiuser, data.apipass)
 	    return auth.authToken(data.apiuser, data.apipass)
 	})
     .then(function (data) {
-        apitoken.add(data.id_token, data.user, email)
-        return apitoken.add(data.id_token, data.user)
+        console.log(data.id_token, data.user, email)
+        return apitoken.add(data.id_token, data.user, email)
     })
-    .then(function (data) {
+        .then(function (data) {
+        console.log(data)
         res.send(data)
     })
     .catch(function (error) {
@@ -66,7 +102,7 @@ app.get('/dashboard', function (req, res) {
     cookieToToken.get(req.query.jwttoken)
     .then(function (token) {
         if (token.length <= 0) {
-
+            res.send({jwt: false})
         }else{
             var p1 = numberOfOrders.getorders("acknowledged", token[0].jetapitoken)
             var p2 = numberOfItems.get(token[0].jetapitoken)
@@ -74,14 +110,21 @@ app.get('/dashboard', function (req, res) {
             Promise.all([p1,p2,p3])
             .then(function (data) {
                 console.log({ "orders": data[0], "items": data[1], "returns": data[2] })
-                res.send({"orders": data[0], "items": data[1], "returns": data[2]
-                })
+                res.send({"orders": data[0], "items": data[1], "returns": data[2], jwt: true})
             })
         }
     })
     .catch(function (error) {
         console.log(error)
     })
+})
+
+app.post('/login', function (req, res) {
+    login.query(req.body.email, req.body.password)
+        .then(function (data) {
+            res.send(data)
+            console.log(data)
+        })
 })
 
 
@@ -98,7 +141,7 @@ app.put('/upload', function (req, res) {
         res.send(data)
     })
 })
-   
+ 
 app.put('/updateprice', function (req, res) {
     updateprice.send()
     .then(function (data) {
@@ -141,33 +184,98 @@ app.put('/shiparray', function (req, res) {
     })
 })
 
+//app.get('/orders', function (req, res) {
+//    var jetapitoken = ""
+//    cookieToToken.get(req.query.jwttoken)
+//    .then(function (data) {
+//        jetapitoken = data[0].jetapitoken
+//        return orders.getorders("acknowledged", data[0].jetapitoken)
+//    })
+//    .then(function (id_array) {
+//        //console.log(id_array)
+//        for (var i in id_array) {
+//            setTimeout(function () { listorderdetails(id_array[i], id_array.length) }, i+10);
+//            }
+//        var arr = []
+//        function listorderdetails(data, len) {
+//            orderdetails.get(data, jetapitoken)
+//                .then(function (data) {
+//                arr.push({
+//                    "order":data
+//                })
+//                    console.log(arr.length, len)
+//                if (arr.length == len) {
+//                    console.log(arr)
+//                    res.send(arr)
+//                }
+//            })
+//            }
+//    })          
+//})
+//TODO: add merchant id to WHERE clause
 app.get('/orders', function (req, res) {
-    var jetapitoken = ""
-    cookieToToken.get(req.query.jwttoken)
-    .then(function (data) {
-        jetapitoken = data[0].jetapitoken
-        return orders.getorders("acknowledged", data[0].jetapitoken)
-    })
-    .then(function (id_array) {
-        //console.log(id_array)
-        for (var i in id_array) {
-            setTimeout(function () { listorderdetails(id_array[i], id_array.length) }, i+10);
-            }
-        var arr = []
-        function listorderdetails(data, len) {
-            orderdetails.get(data, jetapitoken)
-                .then(function (data) {
-                arr.push({
-                    "order":data
-                })
-                    console.log(arr.length, len)
-                if (arr.length == len) {
-                    console.log(arr)
-                    res.send(arr)
+    console.log(req.query.request)
+    var arr = []
+    validateToken.get(req.query.jwttoken)
+        .then(function (token) {
+            if (token.length <= 0) {
+                res.send({ jwt: false })
+            } else {
+                switch (req.query.request) {
+                    case "orders":
+                        orderList.get(token)
+                        .then(function (results) {
+                            res.send(results)
+                            //console.log(results)
+                        })
+                        break;
+
+                    case "returns":
+                        var token = ""
+                        cookieToToken.get(req.query.jwttoken)
+                            .then(function (myToken) {
+                                token = myToken;
+                                return returns.get(token, "created")
+                            })
+                            .then(function (returnid) {
+                                //console.log(token[0].jetapitoken, "1234")
+                                //console.log(returnid)
+                                return returnDetails.get(returnid, token)  
+                            })
+                            .then(function (data) {
+                                console.log(data, "data function")
+                                return returnList.get(data)
+                            })
+                            .then(function (results) {
+                                res.send(results)
+                                console.log(results)
+                            })
+                        break;
                 }
-            })
             }
-    })          
+         })
+        .catch(function (error) {
+            console.log(error)
+        })
+})
+
+app.get('/returns', function (req, res) {
+    var arr = []
+    validateToken.get(req.query.jwttoken)
+        .then(function (token) {
+            if (token.length <= 0) {
+                res.send({ jwt: false })
+            } else {
+                return orderList.get(token)
+            }
+        })
+        .then(function (results) {
+            res.send(results)
+            console.log(results)
+        })
+        .catch(function (error) {
+            console.log(error)
+        })
 })
 
 app.get('/items', function (req, res) {

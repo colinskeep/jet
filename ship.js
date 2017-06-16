@@ -1,31 +1,29 @@
 var auth = require('./auth.js')
 var request = require('request')
-var fs = require('fs')
 
-exports.send = function (orderid, order_items) {
-    var global_data = fs.readFileSync("auth.txt").toString();
-    //console.log(order_items)
+exports.send = function (orderid, token, trackingNumber, shipDate, method, estimatedDelivery, carrier, items) {
+    console.log(items)
     return new Promise(function (resolve, reject) {
         request.put({
             url: "https://merchant-api.jet.com/api/orders/" + orderid + "/shipped",
             //url: "http://requestb.in/qd57srqd",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + global_data + ""
+                "Authorization": "Bearer " + token + ""
             },
             body: {
                 "shipments": [
                     {
                   
-                      "shipment_tracking_number": "1Z12342452342",
-                      "response_shipment_date": "2017-05-17T18:00:00.0000000-04:00",
-                      "response_shipment_method": "ups_ground",
-                      "expected_delivery_date": "2017-05-20T18:00:00.0000000-04:00",
-                      "ship_from_zip_code": "12061",
-                      "carrier_pick_up_date": "2017-05-17T18:00:00.0000000-04:00",
-                      "carrier": "UPS",
+                      "shipment_tracking_number": trackingNumber,
+                      "response_shipment_date": shipDate + "T18:00:00.0000000-04:00",
+                      "response_shipment_method": method,
+                      "expected_delivery_date": estimatedDelivery + "T18:00:00.0000000-04:00",
+                      //"ship_from_zip_code": "12061",
+                      //"carrier_pick_up_date": "2017-05-17T18:00:00.0000000-04:00",
+                      "carrier": carrier,
                       "shipment_items": 
-                            order_items
+                            items
                   }
                   ]
             },
@@ -37,7 +35,7 @@ exports.send = function (orderid, order_items) {
                     reject(error)
                 }
                 else {
-                    resolve(true)
+                    resolve(response)
                 }
             })
     })

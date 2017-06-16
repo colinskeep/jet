@@ -12,14 +12,15 @@ setInterval(function () {
     allapitokens.update()
    .then(function (data) {
        for (var x in data) {
-           orders.getorders("ready",data[x].jetapitoken)
+           orders.getorders("ready",data[x].jetapitoken, data[x].merchant_id)
             .then(function (orderids) {
                 if (orderids == "No Orders") {
                 }
                 else {
                     for (var i in orderids) {
                         var ids = orderids[i].split("/")
-                        getorderdetails(orderids[i], data[x].jetapitoken)
+                        //console.log(data[x].merchant_id)
+                        getorderdetails(orderids[i], data[x].merchant_id, data[x].jetapitoken)
                     }
                 }
             })
@@ -35,16 +36,20 @@ setInterval(function () {
 
 
 //TODO: add merchant_id to insert function
-function getorderdetails(orderid, jetapitoken) {
+
+function getorderdetails(orderid, merchant_id, jetapitoken) {
+    var orderid = orderid
+    var merchant_ids = merchant_id
+    //console.log(merchant_id)
     orderdetails.get(orderid, jetapitoken)
         .then((data) => {
             var order_id = ""
-            var merchant_id = ""
-            insertOrder.add(data.reference_order_id, merchant_id, data.fulfillment_node, data.status, data.order_transmission_date, data.buyer.name, data.buyer.phone_number, data.shipping_to.address.address1, data.shipping_to.address.address2, data.shipping_to.address.city, data.shipping_to.address.state, data.shipping_to.address.zip_code, data.order_detail.request_shipping_carrier, data.order_detail.request_shipping_method, data.order_detail.request_ship_by)
+            console.log(merchant_ids)
+            insertOrder.add(data.reference_order_id, merchant_ids, data.fulfillment_node, data.status, data.order_transmission_date, data.buyer.name, data.buyer.phone_number, data.shipping_to.address.address1, data.shipping_to.address.address2, data.shipping_to.address.city, data.shipping_to.address.state, data.shipping_to.address.zip_code, data.order_detail.request_shipping_carrier, data.order_detail.request_shipping_method, data.order_detail.request_ship_by, orderid)
         var arr = []
             for(var y in data.order_items){
                 var item = data.order_items[y].order_item_id
-                insertOrderItems.add(data.reference_order_id, data.order_items[y].merchant_sku, data.order_items[y].order_item_id, data.order_items[y].item_price.base_price, data.order_items[y].item_price.item_tax, data.order_items[y].product_title)
+                insertOrderItems.add(data.reference_order_id, data.order_items[y].merchant_sku, data.order_items[y].order_item_id, data.order_items[y].item_price.base_price, data.order_items[y].item_price.item_tax, data.order_items[y].product_title, data.order_items[y].request_order_quantity)
                 var order_items = {
                     "order_item_acknowledgement_status": "fulfillable",
                     "order_item_id": "" + item + "",

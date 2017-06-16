@@ -1,4 +1,3 @@
-//insert authtoken into db
 const mysql = require('mysql');
 const jwt = require('jsonwebtoken');
 const token = require('./token.js');
@@ -11,32 +10,26 @@ var pool = mysql.createPool({
     database: process.env.MYSQL_DATABASE
 });
 
-exports.add = (jetapitoken, apiuser, email) => {
-    var email = email
-    var apiuser = apiuser
-    var jetapitoken = jetapitoken
+
+exports.get = (jwttoken) => {
     return new Promise((resolve, reject) => {
         pool.getConnection((err, connection) => {
-            if (jetapitoken.length <= 0) {
-                resolve({ "success": false })
-            } else {
-                if (err) {
-                    reject(Error(err))
-                } else {
-                    var querystring = `UPDATE users SET jetapitoken = '${jetapitoken}' WHERE jetapiuser = '${apiuser}' AND email = '${email}';`
+            token.read(jwttoken)
+                .then(function (data) {
+                    //console.log(data)
+                    var querystring = `SELECT merchant_id FROM users WHERE email = '${data.email}';`
                     connection.query(querystring, (error, results, fields) => {
                         if (error) {
-                            reject(error)
                             console.log(error)
+                            reject({ jwt: false })
                         }
                         else {
-                            resolve({ "success": true })
+                            //console.log(results)
+                            resolve(results)
                         }
-                        connection.release()
                     })
-                }
-            }
+                })
+            connection.release()
         })
     })
 }
-

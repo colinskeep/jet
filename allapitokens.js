@@ -14,7 +14,7 @@ exports.update = () => {
             if (err) {
                 reject(Error(err))
             } else {
-                var querystring = `SELECT email, jetapiuser, jetapisecret, jetapitoken FROM users WHERE CHAR_LENGTH(jetapiuser) = 40 AND CHAR_LENGTH(jetapisecret) = 44 ;`
+                var querystring = `SELECT email, jetapiuser, jetapisecret, jetapitoken, merchant_id FROM users WHERE CHAR_LENGTH(jetapiuser) = 40 AND CHAR_LENGTH(jetapisecret) = 44 ;`
                 connection.query(querystring, (error, results, fields) => {
                     if (error) {
                         reject(Error(error))

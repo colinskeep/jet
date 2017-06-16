@@ -11,15 +11,15 @@ var pool = mysql.createPool({
 
 //TODO: escape all fields
 
-exports.add = (order_id, merchant_id, fulfillment_node, status, order_date, buyer_name, phone_number, address1, address2, city, state, zip_code, requested_carrier, shipping_method, ship_by) => {
-    name = "something's"
+exports.add = (order_id, merchant_id, fulfillment_node, status, order_date, buyer_name, phone_number, address1, address2, city, state, zip_code, requested_carrier, shipping_method, ship_by, jet_order_id) => {
+    name = buyer_name
     return new Promise((resolve, reject) => {
         pool.getConnection((err, connection) => {
             if (err) {
                 reject(Error(err))
             } else {
                 name = name.replace("'", "\\'")
-                var querystring = `INSERT INTO jet_orders (order_id, merchant_id, fulfillment_node, status, order_date, buyer_name, phone_number, address1, address2, city, state, zip_code, requested_carrier, shipping_method, ship_by) VALUES ('${order_id}', '${merchant_id}', '${fulfillment_node}', '${status}', '${order_date}', '${name}', '${phone_number}', '${address1}', '${address2}', '${city}', '${state}', '${zip_code}', '${requested_carrier}', '${shipping_method}', '${ship_by}');`
+                var querystring = `INSERT INTO jet_orders (order_id, merchant_id, fulfillment_node, status, order_date, buyer_name, phone_number, address1, address2, city, state, zip_code, requested_carrier, shipping_method, ship_by, jet_order_id) VALUES ('${order_id}', '${merchant_id}', '${fulfillment_node}', '${status}', '${order_date}', '${name}', '${phone_number}', '${address1}', '${address2}', '${city}', '${state}', '${zip_code}', '${requested_carrier}', '${shipping_method}', '${ship_by}', '${jet_order_id}');`
                 connection.query(querystring, (error, results, fields) => {
                     if (error) {
                         reject(error)

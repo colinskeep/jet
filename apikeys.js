@@ -12,7 +12,7 @@ var pool = mysql.createPool({
 
 //TODO: add fulfillment ID into database 
 
-exports.add = (jwttoken, apiuser, apipass) => {
+exports.add = (jwttoken, apiuser, apipass, merchant_id) => {
     return new Promise((resolve, reject) => {
         pool.getConnection((err, connection) => {
             if (err) {
@@ -23,13 +23,14 @@ exports.add = (jwttoken, apiuser, apipass) => {
                     if (results[0].Status == 'OK') {
                         token.read(jwttoken)
                         .then(function (data) {
-                            var querystring = `UPDATE users SET jetapiuser = '${apiuser}', jetapisecret = '${apipass}' WHERE email = '${data.email}';`
+                            var querystring = `UPDATE users SET jetapiuser = '${apiuser}', jetapisecret = '${apipass}', merchant_id = '${merchant_id}' WHERE email = '${data.email}';`
+                            console.log(querystring)
                             connection.query(querystring, (error, results, fields) => {
                                 if (error){
                                     reject(error)
                                 }
                                 else {
-                                    resolve({"apiuser": apiuser, "apipass": apipass, "email": data.email})
+                                    resolve({"apiuser": apiuser, "apipass": apipass, "merchant_id": merchant_id, "email": data.email})
                                 } 
                             })
                         })
