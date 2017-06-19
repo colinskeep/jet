@@ -32,6 +32,8 @@ var validateToken = require('./validate.js')
 var returnList = require('./returnList.js')
 var returns = require('./returns.js')
 var returnDetails = require('./returnDetails.js')
+var getOrderItems = require('./getOrderItems.js')
+var getOrderDetails = require('./getOrderDetails.js')
 
 app.get('/', function (req, res) {
   res.send({
@@ -51,6 +53,31 @@ app.post('/register', function (req, res) {
         console.log(error)
     })
 })
+
+
+app.get('/getOrderItem', function (req, res){
+    getOrderItems.query(req.query.jwttoken, req.query.orderId)
+        .then(function (items) {
+            res.send({ data: items })
+        })
+})
+
+app.put('/refund-order/', function (req, res) {
+    getOrderDetails.get(req.query.jwttoken, req.body.orderId)
+        .then(function (orders) {
+            return orders
+        })
+        .then(function (items) {
+            return getOrderItems(req.query.jwttoken, req.query.orderId)
+        })
+        .then(function (data) {
+            console.log(orders, items)
+            res.send(orders, items)
+            
+        })
+})
+    
+
 
 app.post('/ship', function (req, res) {
 
