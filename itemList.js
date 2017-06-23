@@ -1,4 +1,3 @@
-//List returns from database
 const mysql = require('mysql');
 
 require('dotenv').config();
@@ -9,20 +8,18 @@ var pool = mysql.createPool({
     database: process.env.MYSQL_DATABASE
 });
 
-exports.get = (order_ids) => {
+exports.get = (jwttoken) => {
     return new Promise((resolve, reject) => {
-
-        console.log(order_ids, "returnList.js")
+        console.log(jwttoken[0].merchant_id)
         pool.getConnection((err, connection) => {
-                    var querystring = `SELECT * FROM jet_orders WHERE jet_order_id IN ('${order_ids.join("','")}') ORDER BY order_date DESC;`
-                    console.log(querystring)
+                    var querystring = `SELECT * FROM jet_items WHERE merchant_id = '${jwttoken[0].merchant_id}'  ORDER BY merchant_sku DESC;`
                     connection.query(querystring, (error, results, fields) => {
+                        console.log(querystring)
                         if (error) {
                             console.log(error)
                             reject(error)
                         }
                         else {
-                            //console.log(results)
                             resolve(results)
                         }
                     })

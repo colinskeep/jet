@@ -34,6 +34,13 @@ var returns = require('./returns.js')
 var returnDetails = require('./returnDetails.js')
 var getOrderItems = require('./getOrderItems.js')
 var getOrderDetails = require('./getOrderDetails.js')
+var insertItems = require('./insertItems.js')
+var updateOrder = require('./updateOrder.js')
+var itemList = require('./itemList.js')
+var syncItemList = require('./syncItemList.js')
+var rma = require('./rma.js')
+var returnInsert = require('./returnInsert.js')
+var updateItemSync = require('./updateItemSync.js')
 
 app.get('/', function (req, res) {
   res.send({
@@ -54,6 +61,65 @@ app.post('/register', function (req, res) {
     })
 })
 
+app.put('/add-inventory/', function (req, res) {
+    cookieToToken.get(req.query.jwttoken)
+        .then(function (token) {
+            upload.send(req.query.sku, token, body.product_title, body.pack_quantity, body.brand, body.image_url, body.upc_code, body.product_description, body.manufacturer, body.manufacturers_part_number, body.bullet1, body.bullet2, body.bullet3, body.bullet4, body.bullet5, body.shipping_weight)
+        })
+        .then(function (merchant_id) {
+            validateToken.get(req.query.jwttoken)
+            return merchant_id
+        })
+        .then(function (insert) {
+            return insertItems.add(req.query.sku, merchant_id, req.body.product_title, req.body.pack_quantity, req.body.brand, req.body.image_url, req.body.upc_code, req.body.product_description, req.body.manufacturer, req.body.manufacturers_part_number, req.body.bullet1, req.body.bullet2, req.body.bullet3, req.body.bullet4, req.body.bullet5, req.body.shipping_weight)
+        })
+        .then(function (data) {
+            res.send({ upload: "sent" })
+        })
+})
+
+app.get('/inventory', function (req, res) {
+    validateToken.get(req.query.jwttoken)
+        .then(function (token) {
+            if (token.length <= 0) {
+                res.send({ jwt: false })
+            }
+            else {
+                itemList.get(token)
+                    .then(function (results) {
+                        res.send(results)
+                    })               
+            }
+        })
+})
+
+app.get('/sync', function (req, res) {
+    var token = ""
+    cookieToToken.get(req.query.jwttoken)
+        .then(function (apitoken) {
+            token = apitoken[0].jetapitoken
+            return syncItemList.get(token)    
+        })
+        .then(function (data) {
+            var arr = []
+            for (i in data) {                
+                itemdetails.get(data[i], token)
+                    .then(function (details) {
+                        arr.push(details)
+                        if (data.length == arr.length) {
+                            for (x in arr) {
+                                insertItems.add(arr[x].merchant_sku, arr[x].merchant_id)
+                            }
+                            for (y in arr) {
+                                updateItemSync.get(arr[y].product_title, arr[y].pack_quantity, arr[y].brand, arr[y].image_url, arr[y].upc_code, arr[y].product_description, arr[y].manufacturer, arr[y].manufacturers_part_number, arr[y].bullets[1], arr[y].bullets[2], arr[y].bullets[3], arr[y].bullets[4], arr[y].bullets[5], arr[y].shipping_weight, arr[y].merchant_id, arr[y].merchant_sku)
+                            }
+
+                        } else { }
+                    })
+            }
+        })
+})
+
 
 app.get('/getOrderItem', function (req, res){
     getOrderItems.query(req.query.jwttoken, req.query.orderId)
@@ -62,19 +128,13 @@ app.get('/getOrderItem', function (req, res){
         })
 })
 
-app.put('/refund-order/', function (req, res) {
-    getOrderDetails.get(req.query.jwttoken, req.body.orderId)
-        .then(function (orders) {
-            return orders
-        })
-        .then(function (items) {
-            return getOrderItems(req.query.jwttoken, req.query.orderId)
+app.post('/refund-order', function (req, res) {
+    cookieToToken.get(req.body.jwttoken)
+        .then(function (token) {
+            rma.send(req.body.refunds[0].return_id, req.body.refunds[0].order_id, token[0].jetapitoken, req.body.refunds)
         })
         .then(function (data) {
-            console.log(orders, items)
-            res.send(orders, items)
-            
-        })
+            res.send(data)})
 })
     
 
@@ -88,6 +148,8 @@ app.post('/ship', function (req, res) {
     var shipDate = req.body.shipDate
     var estimatedDelivery = req.body.estimatedDelivery
     var token = ""
+    var status = ""
+    var reference_order_id = ""
     
     cookieToToken.get(req.body.jwttoken)
         .then(function (apitoken) {
@@ -98,8 +160,15 @@ app.post('/ship', function (req, res) {
             //console.log(token)
             return ship.send(orderid, token, trackingNumber, shipDate, method, estimatedDelivery, carrier, items)
         })
-        .then(function (data) {
-            console.log(data)
+        .then(function (details) {
+            return orderdetails.get(orderid, token)
+            console.log(body.status, details.status)
+            status = body.status
+            reference_order_id = body.reference_order_id
+        })
+        .then(function (update) {
+            updateOrder.get(update.status, update.reference_order_id)
+            res.send(update)
         })
 })
 
@@ -198,7 +267,7 @@ app.get('/orderstatus', function (req, res) {
 })
 
 app.get('/orderdetails', function (req, res) {
-    orderdetails.get("3b8b963125df4684afbaf272fe381660")
+    orderdetails.get("5cb256774e064e2a9f54472e89036309","eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IldscUZYb2E1WkxSQ0hldmxwa1BHOVdHS0JrMCJ9.eyJpc19zYW5kYm94X3VpZCI6IlRydWUiLCJtZXJjaGFudF9pZCI6IjYwZDY0Y2Q2YTllNDRmM2M4ODk3Yzc1MDZmYjQ5NjFjIiwicGFydG5lcl90eXBlIjoiTWVyY2hhbnQiLCJzY29wZSI6Imlyb25tYW4tYXBpIiwiaXNzIjoiamV0LmNvbSIsImV4cCI6MTQ5ODE0NzIzNywibmJmIjoxNDk4MTExMjM3fQ.clI4oHZCoel0Rluujl_HU8PRAV3js63O1AOenKqpuHY0ni4OXeZD7fIZzmHePytH1VsvdreXp0WKuoaKjMuUr4IgZvaFUg7rSsC1_ML3BiVRvCffLxO4mspR5QEvX4gHg01MAAJkVGiQJLeRrf20F9d2eEwlAQJ2gVgiNHIhzB66EhkTfdpWEl1G2gztaoZmhhHmV7LoPJUKOe-kJrZERWVbTXOp-BgyJGRUAXGhA-W5YsVzILNV__IZbIZtGIevByAHxJB0OURjIzVyImVbvUkjsL5HI08okT0gkbxOrfQhOEKXQaHycaGdAoakKO6n31aGH355t9rHsN3_lNHlu-jR6wQFqs08JrzxGUELjRgXh2ZKybgw7lROx0Ht_dI-SU5qxUQFV3g3gkwt4F9sLk04E7IW_Af3TJXOPHl4-F_fFc7yr51fu-lkyHmyqt-xAiuS5AlHHxIVbWSEV85IF0wLd5ODJsH4MqbEeS4ANvZE6P_2vy412kk3qAN13cGcJyM_7-lDrG6Nn-wdCVQrzcMe-SeTqgefRGqZcN0ncWJ88nhcBMPXswZB8RFd6SHypjP-5e7r8Ucx7opr2RntJluzgfjD-9cIhKWJWqJDMPyTALZa9ygNTE37_8ejjfGPbNTOj2rjMiSuktVDfKRy7XA_QxNWgPa7P5AppXehSDM")
     .then(function (data) {
         res.send(data)
     })
@@ -251,10 +320,10 @@ app.get('/orders', function (req, res) {
                 switch (req.query.request) {
                     case "orders":
                         orderList.get(token)
-                        .then(function (results) {
-                            res.send(results)
-                            //console.log(results)
-                        })
+                            .then(function (results) {
+                                res.send(results)
+                                //console.log(results)
+                            })
                         break;
 
                     case "returns":
@@ -267,24 +336,36 @@ app.get('/orders', function (req, res) {
                             .then(function (returnid) {
                                 //console.log(token[0].jetapitoken, "1234")
                                 //console.log(returnid)
-                                return returnDetails.get(returnid, token)  
+                                return returnDetails.get(returnid, token)
                             })
-                            .then(function (data) {
-                                console.log(data, "data function")
-                                return returnList.get(data)
-                            })
-                            .then(function (results) {
-                                res.send(results)
-                                console.log(results)
+                            .then(function (insert) {
+                                console.log(insert)
+                                var arr = []
+                                for (i in insert) {
+                                    console.log(arr.length, insert.length)
+                                    returnInsert.get(insert[i].return_id, insert[i].order_id)
+                                        .then((data) => {
+                                            arr.push(data)
+                                            if (arr.length == insert.length) {
+                                                        //console.log(arr)
+                                                returnList.get(arr)
+                                                    .then(function (results) {
+                                                        console.log(results)
+                                                        res.send(results)
+                                                    })
+                                            }
+                                            else { }
+                                        })
+                                        
+                                }
                             })
                         break;
                 }
             }
-         })
-        .catch(function (error) {
-            console.log(error)
         })
 })
+
+
 
 app.get('/returns', function (req, res) {
     var arr = []
