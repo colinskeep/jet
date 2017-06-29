@@ -1,17 +1,17 @@
 var id = require('./itemDetails.js');
 var request = require('request');
 
-exports.send = function (sku, jwttoken, product_title, pack_quantity, brand, image_url, upc_code, product_description, manufacturer, manufacturers_part_number, bullet1, bullet2, bullet3, bullet4, bullet5, shipping_weight) {
+exports.send = function (sku, jetapitoken, product_title, pack_quantity, brand, image_url, upc_code, product_description, manufacturer, manufacturers_part_number, bullet1, bullet2, bullet3, bullet4, bullet5, shipping_weight) {
     return new Promise(function (resolve, reject) {
         request.put({
             url: "https://merchant-api.jet.com/api/merchant-skus/" + sku + "",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + jwttoken + ""
+                "Authorization": "Bearer " + jetapitoken + ""
             },
             body: {
                 product_title: product_title,
-                multipack_quantity: pack_quantity,
+                multipack_quantity: parseInt(pack_quantity),
                 brand: brand,
                 main_image_url: image_url,
                 standard_product_codes: [
@@ -30,16 +30,16 @@ exports.send = function (sku, jwttoken, product_title, pack_quantity, brand, ima
                     bullet4,
                     bullet5
                 ],
-                shipping_weight_pounds: shipping_weight,
+                shipping_weight_pounds: parseInt(shipping_weight),
             },
             json: true
         },
             function (error, response, body) {
-                if (error) {
-                    reject(error)
+                if (response.body.errors) {
+                    reject(response.body.errors)
                 }
                 else {
-                    resolve("sent")
+                    resolve(jetapitoken)
                 }
             }
         );

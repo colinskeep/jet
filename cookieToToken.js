@@ -17,7 +17,7 @@ exports.get = (jwttoken) => {
             token.read(jwttoken)
            .then(function (data) {
                //console.log(data)
-               var querystring = `SELECT jetapitoken FROM users WHERE email = '${data.email}';`
+               var querystring = `SELECT jetapitoken, fid FROM users WHERE email = '${data.email}';`
                connection.query(querystring, (error, results, fields) => {
                    if (error) {
                        console.log(error)

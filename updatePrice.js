@@ -1,22 +1,15 @@
-var auth = require('./auth.js');
-var sku = require('./sku.js');
 var request = require('request');
-var fs = require('fs');
 
-
-exports.send = function () {
-    var itemid = sku.itemid();
-    var global_data = fs.readFileSync("auth.txt").toString();
-    var price = 80.00; 
+exports.send = function (sku, token, price) {
     return new Promise(function (resolve, reject) {
         request.put({
-            url: "https://merchant-api.jet.com/api/merchant-skus/" + itemid.sku + "/price",
+            url: "https://merchant-api.jet.com/api/merchant-skus/" + sku + "/price",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + global_data + ""
+                "Authorization": "Bearer " + token + ""
             },
             body: {
-                "price": price
+                "price": parseFloat(price)
             },
             json: true
         },
@@ -26,7 +19,12 @@ exports.send = function () {
                     reject(error)
                 }
                 else {
-                    resolve(true)
+                    if (response.body) {
+                        resolve(response.body)
+                    }
+                    else {
+                        resolve(true)
+                    }
                 }
             }
         );

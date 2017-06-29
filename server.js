@@ -41,6 +41,13 @@ var syncItemList = require('./syncItemList.js')
 var rma = require('./rma.js')
 var returnInsert = require('./returnInsert.js')
 var updateItemSync = require('./updateItemSync.js')
+var helmet = require('helmet')
+var compression = require('compression')
+var syncinsertItems = require('./syncinsertItems.js')
+
+
+app.use(helmet())
+app.use(compression())
 
 app.get('/', function (req, res) {
   res.send({
@@ -61,21 +68,61 @@ app.post('/register', function (req, res) {
     })
 })
 
-app.put('/add-inventory/', function (req, res) {
-    cookieToToken.get(req.query.jwttoken)
+app.post('/add-inventory/', function (req, res) {
+    cookieToToken.get(req.body.jwttoken)
         .then(function (token) {
-            upload.send(req.query.sku, token, body.product_title, body.pack_quantity, body.brand, body.image_url, body.upc_code, body.product_description, body.manufacturer, body.manufacturers_part_number, body.bullet1, body.bullet2, body.bullet3, body.bullet4, body.bullet5, body.shipping_weight)
+            return upload.send(req.body.sku, token[0].jetapitoken, req.body.product_title, req.body.pack_quantity, req.body.brand, req.body.image_url, req.body.upc_code, req.body.product_description, req.body.manufacturer, req.body.manufacturers_part_number, req.body.bullet1, req.body.bullet2, req.body.bullet3, req.body.bullet4, req.body.bullet5, req.body.shipping_weight)
         })
         .then(function (merchant_id) {
-            validateToken.get(req.query.jwttoken)
-            return merchant_id
+            return validateToken.get(req.body.jwttoken)
         })
         .then(function (insert) {
-            return insertItems.add(req.query.sku, merchant_id, req.body.product_title, req.body.pack_quantity, req.body.brand, req.body.image_url, req.body.upc_code, req.body.product_description, req.body.manufacturer, req.body.manufacturers_part_number, req.body.bullet1, req.body.bullet2, req.body.bullet3, req.body.bullet4, req.body.bullet5, req.body.shipping_weight)
+            console.log(insert)
+            return insertItems.add(req.body.sku, insert[0].merchant_id, req.body.product_title, req.body.pack_quantity, req.body.brand, req.body.image_url, req.body.upc_code, req.body.product_description, req.body.manufacturer, req.body.manufacturers_part_number, req.body.bullet1, req.body.bullet2, req.body.bullet3, req.body.bullet4, req.body.bullet5, req.body.shipping_weight)
         })
         .then(function (data) {
             res.send({ upload: "sent" })
         })
+        .catch(function (error) {
+            console.log(error)
+        })
+
+})
+
+app.post('/update-inventory', function (req, res) {
+    var sku = req.body.sku
+    var qty = req.body.qty
+    var price = req.body.price
+    var jetapitoken = ''
+
+    console.log(req.body)
+    cookieToToken.get(req.body.jwttoken)
+        .then(function (tokens) {
+            jetapitoken = tokens[0].jetapitoken
+            var fid = tokens[0].fid
+            updateinv.send(sku, jetapitoken, fid, qty)
+        })
+        .then(function () {
+            return updateprice.send(sku, jetapitoken, price)
+        })
+        .then(function (results) {
+            console.log({ data: results })
+            res.send({ data: results })
+        })
+        .catch(function (err) {
+            console.log(err)
+        })
+})
+
+app.get('/update-price', function (req, res) {
+    cookieToToken.get(req.body.jwttoken)
+        .then(function (token) {
+            var jetapitoken = token[0].jetapitoken
+            console.log(token, fid, jetapitoken)
+            updateprice.send(req.body.sku, jetapitoken, req.body.price)
+        })
+
+
 })
 
 app.get('/inventory', function (req, res) {
@@ -105,13 +152,19 @@ app.get('/sync', function (req, res) {
             for (i in data) {                
                 itemdetails.get(data[i], token)
                     .then(function (details) {
+                        if (details.bullets) {
+                            console.log(details.bullets.length)
+                        } else {
+                        details.bullets = ["","","","",""]
+                        } //check number of bullets and define remaining bullets as empty
                         arr.push(details)
                         if (data.length == arr.length) {
                             for (x in arr) {
-                                insertItems.add(arr[x].merchant_sku, arr[x].merchant_id)
+                                syncinsertItems.add(arr[x].merchant_sku, arr[x].merchant_id)
                             }
                             for (y in arr) {
-                                updateItemSync.get(arr[y].product_title, arr[y].pack_quantity, arr[y].brand, arr[y].image_url, arr[y].upc_code, arr[y].product_description, arr[y].manufacturer, arr[y].manufacturers_part_number, arr[y].bullets[1], arr[y].bullets[2], arr[y].bullets[3], arr[y].bullets[4], arr[y].bullets[5], arr[y].shipping_weight, arr[y].merchant_id, arr[y].merchant_sku)
+
+                                updateItemSync.get(arr[y].product_title, arr[y].pack_quantity, arr[y].brand, arr[y].image_url, arr[y].upc_code, arr[y].product_description, arr[y].manufacturer, arr[y].manufacturers_part_number, arr[y].bullets[0], arr[y].bullets[1], arr[y].bullets[2], arr[y].bullets[3], arr[y].bullets[4], arr[y].shipping_weight, arr[y].merchant_id, arr[y].merchant_sku)
                             }
 
                         } else { }
@@ -131,10 +184,15 @@ app.get('/getOrderItem', function (req, res){
 app.post('/refund-order', function (req, res) {
     cookieToToken.get(req.body.jwttoken)
         .then(function (token) {
-            rma.send(req.body.refunds[0].return_id, req.body.refunds[0].order_id, token[0].jetapitoken, req.body.refunds)
+            return rma.send(req.body.refunds[0].return_id, req.body.refunds[0].order_id, token[0].jetapitoken, req.body.refunds)
         })
         .then(function (data) {
-            res.send(data)})
+            console.log(data)
+            res.send(data)
+        })
+        .catch(function (err) {
+            console.log(err)
+        })
 })
     
 
@@ -161,6 +219,8 @@ app.post('/ship', function (req, res) {
             return ship.send(orderid, token, trackingNumber, shipDate, method, estimatedDelivery, carrier, items)
         })
         .then(function (details) {
+            console.log(details)
+            res.send(details)
             return orderdetails.get(orderid, token)
             console.log(body.status, details.status)
             status = body.status
@@ -168,7 +228,7 @@ app.post('/ship', function (req, res) {
         })
         .then(function (update) {
             updateOrder.get(update.status, update.reference_order_id)
-            res.send(update)
+            console.log("cock")
         })
 })
 

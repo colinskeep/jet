@@ -1,4 +1,3 @@
-//insert order into database
 const mysql = require('mysql');
 
 require('dotenv').config();
@@ -11,13 +10,14 @@ var pool = mysql.createPool({
 
 //TODO: escape all fields
 
-exports.add = (order_id, merchant_id, fulfillment_node, status, order_date, buyer_name, phone_number, address1, address2, city, state, zip_code, requested_carrier, shipping_method, ship_by, jet_order_id) => {
+exports.add = (sku, merchant_id) => {
+    console.log(merchant_id)
     return new Promise((resolve, reject) => {
         pool.getConnection((err, connection) => {
             if (err) {
                 reject(Error(err))
             } else {
-                var querystring = `INSERT INTO jet_orders (order_id, merchant_id, fulfillment_node, status, order_date, buyer_name, phone_number, address1, address2, city, state, zip_code, requested_carrier, shipping_method, ship_by, jet_order_id) VALUES ('${order_id}', '${merchant_id}', '${fulfillment_node}', '${status}', '${order_date}', '${name}', '${phone_number}', '${address1}', '${address2}', '${city}', '${state}', '${zip_code}', '${requested_carrier}', '${shipping_method}', '${ship_by}', '${jet_order_id}');`
+                var querystring = `INSERT INTO jet_items (merchant_sku, merchant_id) VALUES ('${sku}', '${merchant_id[0].merchant_id}');`
                 connection.query(querystring, (error, results, fields) => {
                     if (error) {
                         reject(error)

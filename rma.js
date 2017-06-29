@@ -5,8 +5,6 @@ exports.send = function (return_id, orderid, token, items) {
     var returnids = return_id
     var orderids = orderid
     var tokens = token
-    //console.log(items)
-
 
     //TODO: expected logic flaw if customer returns 2 of the same order_item_id and only receives refund on 1
     var arr = []
@@ -47,11 +45,10 @@ exports.send = function (return_id, orderid, token, items) {
             
             function (error, response, body) {
                 if (error) {
-                    reject(error)
+                    resolve(error)
                 }
                 else {
-                    //console.log(body)
-                    resolve({data: true})
+                    resolve(response)
                 }
             })
     })

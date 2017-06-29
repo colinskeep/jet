@@ -10,14 +10,15 @@ var pool = mysql.createPool({
 
 //TODO: escape all fields
 
-exports.add = (sku, merchant_id) => {
+exports.add = (sku, merchant_id, product_title, pack_quantity, brand, image_url, upc_code, product_description, manufacturer, manufacturers_part_number, bullet1, bullet2, bullet3, bullet4, bullet5, shipping_weight) => {
     return new Promise((resolve, reject) => {
         pool.getConnection((err, connection) => {
             if (err) {
                 reject(Error(err))
             } else {
-                var querystring = `INSERT INTO jet_items (merchant_sku, merchant_id) VALUES ('${sku}', '${merchant_id}');`
-                connection.query(querystring, (error, results, fields) => {
+                var querystring = `INSERT INTO jet_items (merchant_sku, merchant_id, product_title, pack_quantity, brand, image_url, upc_code, product_description, manufacturer, manufacturers_part_number, bullet1, bullet2, bullet3, bullet4, bullet5, shipping_weight) VALUES ('${sku}', '${merchant_id}' , '${product_title}', '${pack_quantity}', '${brand}', '${image_url}', '${upc_code}', '${product_description}', '${manufacturer}', '${manufacturers_part_number}', '${bullet1}', '${bullet2}', '${bullet3}', '${bullet4}', '${bullet5}', '${shipping_weight}');`
+                console.log(querystring)
+                connection.query(querystring, (error, results, body) => {
                     if (error) {
                         reject(error)
                     }
@@ -30,4 +31,3 @@ exports.add = (sku, merchant_id) => {
         })
     })
 }
-

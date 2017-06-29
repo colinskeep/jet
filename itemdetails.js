@@ -1,7 +1,5 @@
-var auth = require('./auth.js');
 var request = require('request');
-var cookieToToken = require('./cookieToToken.js')
-var fs = require('fs');
+
 
 
 exports.get = function (sku, token) {
